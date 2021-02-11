@@ -1,11 +1,4 @@
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from scipy.stats import norm
-mpl.rcParams['font.family'] = 'Avenir Next'
-mpl.rcParams['font.size'] = 18
-mpl.rcParams['font.weight'] = 'medium'
-
 
 def get_variables(dof):
 	if dof %2 ==0:
@@ -21,7 +14,31 @@ def get_variables(dof):
 
 	return variables
 
+# basis functions below are the trigonometric basis fcns
+#  used in Van de Walle, ICET, & others: these are implemented for
+#  arbitrary numbers of components, but are less smooth compared
+#  to chebychev basis  (more derivative discontinuities)
+
+#/-------------------------------------------------------/
+def phi_trig(n,sigma,dof):
+    sigma = np.array(sigma)
+    if n ==0:
+        phi=np.ones(len(sigma))
+
+    if n % 2 !=0:
+        phi = -np.cos( ( np.pi * ( n +1) * sigma)  /dof)
+
+    if n % 2 ==0:
+        phi = -np.sin( ( np.pi *  n  * sigma)  /dof)
+
+    return np.prod(phi)
+#/-------------------------------------------------------/
+
+
+
 # basis functions below are the discrete chebychev basis
+# improved smoothness over trig basis, but only implemented
+# up to 4 degrees of freedom
 #/-------------------------------------------------------/
 def phi_0(sigma,dof):
 	return np.ones(np.shape(sigma))
@@ -52,41 +69,3 @@ def phi_3(sigma,dof):
 	if dof ==4:
 		return np.prod(np.multiply((-17/3)*np.sqrt(1/10),sigma) + np.multiply((1/3)*np.sqrt(5/2),(np.multiply(sigma,np.multiply(sigma,sigma)))))
 #/--------------------------------------------------------/
-
-# basis functions can be plotted - useful for comparing
-#    smoothness to other site basis function types
-def plot_basis():
-	x = get_variables(4)
-
-	y1 = phi_1(x,4)
-	y2 = phi_2(x,4)
-	y3 = phi_3(x,4)
-	x = [int(i) for i in x]
-	fig, ax = plt.subplots()
-	plt.xlabel('Spin variable $\sigma$')
-	plt.ylabel('$\phi_m$ ($\sigma$)')
-	plt.ylim([-1.5,1.5])
-	plt.xlim([-2,2])
-	ax.spines['top'].set_visible(False)
-	ax.spines['right'].set_visible(False)
-	ax.yaxis.set_ticks_position('left')
-	ax.xaxis.set_ticks_position('bottom')
-	ax.spines['bottom'].set_position(('outward',10))
-	ax.spines['left'].set_position(('outward',5))
-	plt.tight_layout()
-
-
-	legend = []
-	plt.plot(x, [1]*len(x), linestyle='dotted')
-	legend.append(r'$\phi_0$')
-	plt.plot(x,y1,linestyle='dashed')
-	legend.append(r'$\phi_1$')
-	plt.plot(x,y2,linestyle='dashdot')
-	legend.append(r'$\phi_2$')
-	plt.plot(x,y3,linestyle='solid')
-	legend.append(r'$\phi_3$')
-	plt.legend(legend,loc='best',prop={"size":10})
-	
-	fig.savefig('plot_basis.png')#, transparent=True)
-
-#plot_basis()

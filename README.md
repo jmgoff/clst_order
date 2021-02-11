@@ -1,24 +1,92 @@
 # clst_order
-Multi-point order parameters used to quantify chemical ordering in crystal systems.
 
-This library written in python 3.7 can be used to quantify chemical ordering in substitutional
-crystal systems on single sublattices. Future developments will extend this to crystal systems
-with multiple non-exchanging sublattices, and systems with 3+ components. In the current
-version, many-point ordering parameters can be calculated for binary alloy systems with both
-3D and 2D symmetry, or the code can be used to calculate the Warren-Cowley pair parameters.
-Due to it's interface with the Atomistic Simulation Environment package, it can be used to
-evaluate chemical ordering from a variety of simulation types and software packages as a
-post-processing tool.
+## Requirements
 
-Requirements:
-
-Python 3.7.1 or later
-spglib v. 1.16.0 (should be compatible with many versions though - this was the version used for the tests)
-ASE v. 3.16.0 or later
+Python 3.6 or later spglib v. 1.16.0
+ASE v. 3.16.0 or later recommended
 
 Both required modules can be installed via pip:
 
-pip install ase
-pip install spglib
+<code><pre>pip install ase && pip install spglib</code></pre>
 
-see examples for usage
+
+## Summary
+
+Post-processing tools for calculating short-range order (SRO) parameters in
+substitutional lattice systems. These tools can be used to calculate the
+Warren-Cowley pair paramters as well as the cluster order parameters defined in
+PRB ... The occurrence of arbitrary multi-point SRO motifs are systematically
+quantified by direct calculation normalized cluster probabilities. The software
+is written in python/cython for front-end accessiblity, and is compatible with
+any crystal structure file compatible [with
+ASE](https://wiki.fysik.dtu.dk/ase/ase/io/io.html). This includes trajectory
+files from LAMMPS, RASPA, VASP, Quantum Espresso, etc. Trajectories from Monte
+Carlo simulations in cluster expansion software packages such as CASM and ICET
+can also be handled. If you are quantifying SRO in Monte Carlo simulations based
+on cluster expansions, see the ICET branch for a fast on-the-fly cluster order
+parameter calculator.
+
+## Installation
+
+run clean first
+
+<pre><code>./clean.sh </code></pre>
+
+### cython (recommended)
+
+
+Link the appropriate gcc compiler in your bin. For example in an anaconda bin
+directory (if using anaconda 3):
+
+<pre><code>ln -s  x86_64-conda_cos6-linux-gnu-gcc gcc  </code></pre>
+
+Add numpy libraries to the build. (can be found with np.__file__ after importing
+numpy as np in a python script)
+
+<pre><code>export
+CFLAGS=-I/path/to/python/packages/site-packages/numpy/core/include</code></pre>
+
+<pre><code>python setup.py build_ext --inplace</code></pre>
+
+### Python only setup
+
+<pre><code>./python_only.sh </code></pre>
+
+
+## Usage
+
+Python software is currently set up for single sublattice 2D/quasi-2D surfaces
+as well as 3D single sublattice substitutional crystals within (m x n x l)
+supercells. Functionality is being added for multiple sublattices in 2D and 3D
+crystals, and for evaluation of correlation functions. A minimalistic example is
+given below for a 5-layer AB surface alloy system with ASE Atoms object inputs.
+It calculates the probability of an A-A-A-A cluster, which can then be divided
+by marginal probabilities to obtain cluster order parameters. Currently, one
+cluster probability with one occupation is measured per calculation. This will
+soon be changed to the probabilities of all occupations in a single cluster.
+
+<pre><code>from clst_prob import *
+prim_vectors, p_sites, p_numbers, p_sublattices = from_ase( prim_atoms , zsubs )
+
+p = prim_cell(prim_vectors, p_sites, p_numbers, zsubs = [[0,1,2,3,4]],
+sublattices=p_sublattices)
+
+vectors, sites, numbers, sublattices = from_ase(supercell_atoms, zsubs)
+
+clst_verts =[ [0.  , 0.  , 0.66290], 
+[0.33333333 , 0.66666667 , 0.58145],
+[0.66666667 , 0.33333333 , 0.50000], 
+[0.00000 , 0.00000 , 0.41855] ]
+
+supercell = cluster_cell(vectors,sites,numbers,p)
+
+clst =  cluster(clst_verts,d_occ='-1-1-1-1')
+
+supercell.add_cluster(clst)
+
+probabilities, clst_functions = y.cluster_avg_2d()</code></pre>
+
+Detailed descriptions of variables are provided in the <code><pre>clst_prob.py</code></pre>
+script and example execution is provided in the examples folder. This
+includes an example for parallelized execution of the software for many large
+trajectory files.

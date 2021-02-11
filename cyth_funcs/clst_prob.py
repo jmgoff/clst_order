@@ -39,12 +39,12 @@ def get_top_struct(atoms):
 
 class cluster:
 	def __init__(self, vertices,d_occ, **kwargs):
-		# cluster vertices in fractional coords
+		# spin_variables : np.array of possible spin variables for sites in a cluster
+		# cluster vertices in fractional coords (np.array)
 		self.vertices = vertices
-		# desired cluster occupation if applicable
-		# ordered vector of occupation variables 
 		try:
-			self.d_occ = d_occ #''.join(str(k) for k in kwargs['d_occ'])
+			# desired cluster occupation if applicable ('str')
+			self.d_occ = d_occ 
 		except KeyError:
 			pass
 
@@ -220,5 +220,6 @@ def from_ase(atoms,zsubs):
 				if get_layer(atoms,at) in sublat:
 					sublat.append(at.index)
 			sublattices[ind] = sublat
-			
+	# returns lattice vectors, crystal positions, atomic numbers, and sublattice 
+	#    indices for an ASE atoms object	
 	return ( vectors,sites, numbers,sublattices)
