@@ -16,6 +16,8 @@ lst = [0.08 ]
 
 #---------------------------------------------------------------
 #Some windowing/autocorrelation procedures adapted from MCHammer
+#  These functions are just used to help estimate errors in 
+#  our MC simulations
 
 # Automated windowing procedure from Sokal (1989)
 def auto_window(taus, c):
@@ -45,8 +47,15 @@ def acf(data, max_lag):
 burn_in = 4000
 
 def single_comp(args):
+
 	comp = args['comp']
 	comp_label = comp_labels[lst.index(comp)]
+
+	#define the occupation vector of the cluster you want to sample
+	sgma = '-1,-1,-1,-1'
+	#define the probability in a random alloy (or use get_prand function)
+	prand = comp*comp*comp*comp
+
 	tmp = {}
 	auto = {}
 	try:
@@ -60,9 +69,11 @@ def single_comp(args):
 			ks = [int(m) for m in data.keys()]
 			for key in sorted(ks):
 				key = str(key)
-				if np.average(data[key]) <= comp: # Maximum prob is comp/degen
-					dat.append(1- ( np.average(data[key]) / ((comp)**4) ))
+				prb = data[key]['occs'][sgma]
+				if prb <= comp: # Maximum prob is comp/degen
+					dat.append(1- ( prb / ( prand ))
 				else:
+					print ('symmetry detection error - try refining your structure')
 					#TODO address occasional symmetry detection error here
 					pass
 			tmp[d] = dat

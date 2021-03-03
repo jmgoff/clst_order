@@ -21,19 +21,33 @@ def get_variables(dof):
 
 #/-------------------------------------------------------/
 def phi_trig(n,sigma,dof):
-    sigma = np.array(sigma)
-    if n ==0:
-        phi=np.ones(len(sigma))
+	sigma = np.array(sigma)
+	if n ==0:
+		phi=np.ones(len(sigma))
 
-    if n % 2 !=0:
-        phi = -np.cos( ( np.pi * ( n +1) * sigma)  /dof)
+	if n % 2 !=0:
+		phi = -np.cos( ( np.pi * ( n +1) * sigma)  /dof)
 
-    if n % 2 ==0:
-        phi = -np.sin( ( np.pi *  n  * sigma)  /dof)
+	if n % 2 ==0:
+		phi = -np.sin( ( np.pi *  n  * sigma)  /dof)
 
-    return np.prod(phi)
+	return np.prod(phi)
 #/-------------------------------------------------------/
 
+def phi_t(m,sigma,dof):
+	phi = np.zeros(np.shape(sigma))
+	for i in range(np.shape(sigma)[0]):
+		n= m[i]
+		if n ==0:
+			phi[i] = sigma[i]
+
+		if n % 2 !=0:
+			phi[i] = -np.cos( ( np.pi * (n+1) * sigma[i] )  /dof)
+
+		if n % 2 ==0:
+			phi[i] = -np.sin( ( np.pi *  n  * sigma[i] )  /dof)
+
+	return np.prod(phi)
 
 
 # basis functions below are the discrete chebychev basis

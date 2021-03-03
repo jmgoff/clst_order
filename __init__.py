@@ -9,7 +9,8 @@ __all__ = [ 'get_layer', # from clst_prob
 			'cluster_cell',
 			'from_ase',
 			'get_variables', # from lib_basis
-			'phi_0',
+			'phi_t', #trigonometric site basis
+			'phi_0', # some chebychev basis functions
 			'phi_1',
 			'phi_2',
 			'phi_3',

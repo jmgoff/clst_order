@@ -1,6 +1,7 @@
 import sys
-sys.path.append('/media/jgoff/03560cbf-785d-4eb7-81a9-2e4e509058fd/software/cluster_order_master')
+sys.path.append('/media/jgoff/03560cbf-785d-4eb7-81a9-2e4e509058fd/software/github/v2/clst_order')
 from clst_prob import *
+from lib_basis import *
 from multiprocessing import pool, cpu_count
 from mchammer import *
 from subprocess import call
@@ -33,10 +34,10 @@ clst_verts =[
 [0.00000 , 0.00000 , 0.41855]
 ]
 
-#occupation of cluster in spin variables
+#occupations of cluster in spin variables
 # spin variables are assigned lowest spin variable 
 # to lowest atomic number
-occs= [-1,-1,-1,-1]
+occs = get_variables(2)
 
 #cluster probabilities for a single microstate
 import time
@@ -47,15 +48,15 @@ def single_prob(args):
 	#define the cell the cluster will be rastered over "cluster_cell" object
 	y = cluster_cell(vectors,sites2, numbers2, x)
 	# define and append the cluster to the cluster_cell object
-	clst =  cluster(clst_verts,d_occ=''.join(str(i) for i in occs))
+	clst =  cluster(clst_verts,occs)
 	y.add_cluster(clst)
-	# get cluster probability
-	probabilities, clst_functions = y.cluster_avg_2d()
-	return {'%05d' % itr:probabilities}
+	# get cluster probabilities and correlation functions
+	clst_dat = y.cluster_avg(is_slab=True)
+	return {'%05d' % itr:clst_dat}
 
-# evaluate cluster probabilities over 100 parallel MC chains
+# evaluate cluster probabilities over 10 parallel MC chains
 chain_length = 44000
-for k in range(100):
+for k in range(10):
 	try:
 		#this is the icet trajectory file
 		#any other trajectory file can be replaced here

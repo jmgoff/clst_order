@@ -15,9 +15,19 @@ def all_clst_labels(variables,clst_size):
 	for comp in clst_comps:
 		permutes =itertools.permutations(comp)
 		for perm in permutes:
-			p = ''.join(str(k) for k in perm)
+			p = ','.join(str(k) for k in perm)
 			if p not in net:
 				net.append(p)
+	return net
+
+def get_m_labels(fcn_indices,clst_size):
+	#returns m vector (sanchez 1984) for clusters with symmetric
+	# occupations. if they are NOT symmetric, use all_clst_labels instead
+	net = []
+	clst_comps = list(itertools.combinations_with_replacement(fcn_indices,clst_size))
+	for comp in clst_comps:
+		p = ','.join(str(k) for k in comp)
+		net.append(p)
 	return net
 
 def get_layer(atoms,atom):
@@ -38,20 +48,20 @@ def get_top_struct(atoms):
 	return new_atoms
 
 class cluster:
-	def __init__(self, vertices,d_occ, **kwargs):
-		# spin_variables : np.array of possible spin variables for sites in a cluster
-		# cluster vertices in fractional coords (np.array)
+	def __init__(self, vertices,spin_variables, **kwargs):
+		# cluster vertices in fractional coords
 		self.vertices = vertices
-		try:
-			# desired cluster occupation if applicable ('str')
-			self.d_occ = d_occ 
-		except KeyError:
-			pass
-
-		if kwargs['spin_variables']!= None:
-			self.occ = all_clst_labels(kwargs['spin_variables'],len(vertices))
-	
+		self.nverts = len(vertices)
+		self.variables= spin_variables
+		# m vectors from sanchez 1984 - default to 1
+		self.mvec =','.join(str(int(i)) for i in np.ones(len(vertices)))
+		# possible occupations of clusters
+		self.occ = all_clst_labels(spin_variables,len(vertices))
+		#initialize dictionary of cluster occupations
+		self.occs = { oc : 0  for oc in self.occ}
 		return None
+	def copy(self):
+		return self
 
 class prim_cell:
 	def __init__(self, prim_vectors, sites, numbers, zsubs, sublattices):
@@ -82,6 +92,8 @@ class prim_cell:
 		opps = [ opp for opp in self.sym if opp[2][2] == 1]
 		return opps
 
+	def set_sym(self,inp):
+		self.sym = inp
 
 class cluster_cell:
 	def __init__(self, vectors, sites,numbers, prim):
@@ -120,62 +132,36 @@ class cluster_cell:
 
 		return None
 
-	def add_cluster(self, cluster):
-		self.clusters.append(cluster)
+	def add_cluster(self, clust):
+		if len(clust.variables) ==2:
+			self.clusters.append(clust)
+		else:
+			possible_mvecs = get_m_labels( range(len(clust.variables))[1:], len(clust.vertices) )
+			for vec in possible_mvecs:
+				clust.add_mvec(vec)
+			print (clust)
+			self.clusters.append(clust)
+	#NOTE for now, crystal structures that require translational operations to check for equivalent clusters are not implemented
 
-	#NOTE for both averaging fcns, I need to add a check to see if symmetry permuted clusters are already accounted for by another operation(s) to get the true multiplcity.
-	# E.g. for now, crystal structures that require translational operations to check for equivalent clusters are not implemented
+	def cluster_avg(self,is_slab=False,dist_tol = 0.01):
+		#This assumes an (m x n x l) supercell!
+		#TODO implement sqrt(m) x sqrt(n) x l (general cells)
+		if is_slab:
+			sym_ops = self.prim.sym_2d()
+		elif not is_slab:
+			sym_ops = self.prim.sym
 
-	def cluster_avg_2d(self,dist_tol = 0.01):
-		#NOTE this assumes an (m x n x 1) supercell!
-		clusters = self.clusters
+		clusters = self.clusters.copy()
 		sc_mat = np.linalg.inv(self.tmatrix)
 	
-		all_pos = []
-		all_match = []
-		all_phi = []
-		all_sub = []
+		clst_dat = {i : {
+		'phi'  : None,
+		'occs' : {} } for i in range(len(clusters)) }
+		count = 0
 		for cluster in clusters:
-			count = 0
-			for opp in self.prim.sym_2d():
-				clst_pos = []
-				clst_phi = []
-				clst_sub = []
-				positions = cluster.vertices.copy()
-
-				# loop over vertices
-				tmpsc = []
-				for p in positions:
-					pt = np.transpose(np.array([p]))
-					transformed = np.matmul(opp,pt)
-					tmpsc.append(np.transpose(transformed)[0])#.T)
-
-				##convert cluster vertices to supercell basis
-				scpositions = np.matmul( tmpsc , sc_mat)
-				#raster the cluster over the surface
-				mtch = raster_2d(self.sites,np.array(cluster.vertices.copy()), cluster.d_occ, sc_mat, scpositions, self.var_map, self.numbers)
-				all_match.append(mtch)
-				#correlation function disabled
-				all_phi.append(0.)
-
-		return  (all_match , all_phi)
-
-
-	def cluster_avg_3d(self,dof,dist_tol = 0.01):
-		#NOTE this assumes an (m x n x l) supercell!
-		clusters = self.clusters
-		sc_mat = np.linalg.inv(self.tmatrix)
-	
-		all_pos = []
-		all_match = []
-		all_phi = []
-		for cluster in clusters:
-			count = 0
-			# now use all operations
-			for opp in self.prim.sym:
-				clst_pos = []
-				clst_phi = []
-				matchcount = 0
+			all_phis= {j:[] for j in cluster.occ}
+			all_occs= {j:[] for j in cluster.occ}
+			for opp in sym_ops:
 				positions = cluster.vertices.copy()
 
 				# loop over vertices
@@ -185,19 +171,33 @@ class cluster_cell:
 					transformed = np.matmul(opp,pt)
 					tmpsc.append(np.transpose(transformed)[0])
 
-				
-			#   ##convert cluster vertices to supercell basis
+				##convert cluster vertices to supercell basis
 				scpositions = np.matmul( tmpsc , sc_mat)
+				calced_occs = None
+				#raster the cluster over the crystal
+				if is_slab:
+					calced_occs = raster_2d(self.sites,np.array(cluster.vertices.copy()), cluster.occs.copy(), sc_mat, scpositions, self.var_map, self.numbers)
+				else:
+					calced_occs = raster_3d(self.sites,np.array(cluster.vertices.copy()), cluster.occs.copy(), sc_mat, scpositions, self.var_map, self.numbers)
+				#append cluster probabilities to the all_occs dict	
+				for oc in cluster.occ:
+					#cluster probability at given occupation
+					#TODO replace denominator with nsites for general supercells
+					prb = calced_occs[oc] /(  np.prod(np.diag(self.tmatrix)))
+					all_occs[oc].append( prb )
+					#TODO calculate for all cluster basis functions 
+					# in ternary + systems
+					ints = [int(i) for i in oc.split(',')]
+					mvec = cluster.mvec
+					phi = phi_t( [int(i) for i in mvec.split(',')], np.array(ints), len(cluster.variables) )
+					all_phis[oc].append(phi)
+			phis = [np.average(all_phis[k]) * np.average(all_occs[k]) for k in cluster.occ]
+			clst_dat[count]['phi'] = np.average(phis)
+			for oc in cluster.occ:
+				clst_dat[count]['occs'][oc] = np.average(all_occs[oc])
+			count +=1
+		return  clst_dat
 
-				#raster cluster over the 3d cell
-				mtch = raster_3d(self.sites,np.array(cluster.vertices.copy()), cluster.d_occ, sc_mat, scpositions, self.var_map, self.numbers)
-				#TODO implement correlation functions
-				clst_phi.append(0)
-				all_match.append(mtch)
-				all_phi.append(np.average(clst_phi))
-
-		return  (all_match , all_phi )
-			
 
 def from_ase(atoms,zsubs):
 	def get_layer(atoms,atom):
@@ -214,12 +214,13 @@ def from_ase(atoms,zsubs):
 
 	else:
 		vectors = np.array([v for v in atoms.get_cell()])
+		sites = np.array(atoms.get_scaled_positions())
+		numbers = atoms.get_atomic_numbers()
 		for ind, lat in enumerate(zsubs):
 			sublat = []
 			for at in atoms:
 				if get_layer(atoms,at) in sublat:
 					sublat.append(at.index)
 			sublattices[ind] = sublat
-	# returns lattice vectors, crystal positions, atomic numbers, and sublattice 
-	#    indices for an ASE atoms object	
+			
 	return ( vectors,sites, numbers,sublattices)

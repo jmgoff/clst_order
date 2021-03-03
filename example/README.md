@@ -7,7 +7,7 @@ all simulations. From these, the cluster order parameter can be calculated as (1
 - P(Pd-Pd-Pd-Pd)/P<sub>random</sub>) where P<sub>random</sub> = c<sub>Pd</sub>
 c<sub>Pd</sub> c<sub>Pd</sub> c<sub>Pd</sub>. See Goff et al. 2021 for more
 details. The measured cluster probability, P(Pd-Pd-Pd-Pd), is calculated in
-<pre><code>run_sro.py</code></pre>.
+run_sro.py.
 
 ## Running the example:
 
@@ -16,7 +16,7 @@ files of the simulations, .dc files, and the primitive cell structure,
 'atoms.cif', are needed for execution. The resulting probabilities for the 100
 parallel simulations are stored in .json files with an 'example' prefix.
 
-<pre><code>python run_sro.py</code></pre>
+python run_sro.py
 
 This may take a while depending on your parallel environment. To speed it up,
 run it for the first 10 trajectories instead of 100. After the cluster

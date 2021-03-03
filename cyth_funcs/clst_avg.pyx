@@ -23,18 +23,18 @@ def periodic_dist(np.ndarray x0,np.ndarray x1):
 	dist = np.sqrt((delta ** 2).sum(axis=-1))
 	return dist
 
-def raster_2d(np.ndarray sites,np.ndarray verts, str d_occ, np.ndarray sc_mat,np.ndarray scpositions, dict var_map, np.ndarray numbers):
+def raster_2d(np.ndarray sites,np.ndarray verts, dict occs, np.ndarray sc_mat,np.ndarray scpositions, dict var_map, np.ndarray numbers):
 	assert verts.dtype == DTYPE and sc_mat.dtype == DTYPE and scpositions.dtype==DTYPE and sites.dtype == DTYPE
 	cdef float dist_tol =0.001
 	cdef float xyz, value
-	cdef int i,j,ind,count,matchcount, ci,cp,cxyz,index,vt_count
+	cdef int i,j,ind,count,ci,cp,cxyz,index,vt_count
+	cdef str lab
 	cdef np.ndarray p, vts
 	cdef np.ndarray vert_occ = np.zeros(verts.shape[0])
 	cdef np.ndarray vert_inds = np.zeros(verts.shape[0])
 	cdef np.ndarray tmp = np.zeros((3))
 	cdef np.ndarray clst_pos = np.zeros((int(1/round(np.prod(np.diag(sc_mat)),8)),verts.shape[0],3))
 	cdef np.ndarray vert = np.zeros((3))
-	matchcount = 0
 	ci=0
 	#raster cluster over the 2d cell
 	for i in range(int(1/sc_mat[0][0])):
@@ -69,25 +69,24 @@ def raster_2d(np.ndarray sites,np.ndarray verts, str d_occ, np.ndarray sc_mat,np
 		for ind in vert_inds:
 			vert_occ[count] = var_map[numbers[ind]]
 			count += 1
-		# TODO: change instead to count all unique cluster labelings
-		#print (''.join(str(int(k)) for k in vert_occ),d_occ)
-		if ''.join(str(int(k)) for k in vert_occ) == d_occ:
-			matchcount +=1
+		
+		lab = ','.join(str(int(k)) for k in vert_occ)
+		occs[lab] +=1
 	
-	return matchcount/(1/np.prod(np.diag(sc_mat)))
+	return occs
 
-def raster_3d(np.ndarray sites,np.ndarray verts, str d_occ, np.ndarray sc_mat,np.ndarray scpositions, dict var_map, np.ndarray numbers):
+def raster_3d(np.ndarray sites,np.ndarray verts, dict occs, np.ndarray sc_mat,np.ndarray scpositions, dict var_map, np.ndarray numbers):
 	assert verts.dtype == DTYPE and sc_mat.dtype == DTYPE and scpositions.dtype==DTYPE and sites.dtype == DTYPE
 	cdef float dist_tol =0.001
 	cdef float xyz, value
-	cdef int i,j,k,ind,count,matchcount, ci,cp,cxyz,index,vt_count
+	cdef int i,j,k,ind,count,ci,cp,cxyz,index,vt_count
+	cdef str lab
 	cdef np.ndarray p, vts
 	cdef np.ndarray vert_occ = np.zeros(verts.shape[0])
 	cdef np.ndarray vert_inds = np.zeros(verts.shape[0])
 	cdef np.ndarray tmp = np.zeros((3))
 	cdef np.ndarray clst_pos = np.zeros((int(1/round(np.prod(np.diag(sc_mat)),8)),verts.shape[0],3))
 	cdef np.ndarray vert = np.zeros((3))
-	matchcount = 0
 	ci=0
 	#raster cluster over the 3d cell
 	for i in range(int(1/sc_mat[0][0])):
@@ -123,9 +122,7 @@ def raster_3d(np.ndarray sites,np.ndarray verts, str d_occ, np.ndarray sc_mat,np
 		for ind in vert_inds:
 			vert_occ[count] = var_map[numbers[ind]]
 			count += 1
-		# TODO: change instead to count all unique cluster labelings
-		#print (''.join(str(int(k)) for k in vert_occ),d_occ)
-		if ''.join(str(int(k)) for k in vert_occ) == d_occ:
-			matchcount +=1
+		lab= ','.join(str(int(k)) for k in vert_occ)
+		occs[lab] +=1
 	
-	return matchcount/(1/np.prod(np.diag(sc_mat)))
+	return occs

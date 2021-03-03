@@ -14,16 +14,16 @@ ctypedef np.float_t DTYPE_t
 
 def get_variables(int dof):
 	cdef int i,remove
-	cdef np.ndarray variables
+	cdef list variables
 	if dof %2 ==0:
 		i = dof/2
-		variables = np.arange(-i,i+1,dtype=int)
-		remove = list(variables).index(0)
+		variables = list(np.arange(-i,i+1,dtype=int))
+		remove = variables.index(0)
 		del variables[remove]
 	if dof % 2 != 0:
 		i = (dof -1)/2
-		variables = np.arange(-i,i+1,dtype=int)
-	return variables
+		variables = list(np.arange(-i,i+1,dtype=int))
+	return np.array(variables)
 
 # basis functions below are the trigonometric basis fcns
 #  used in Van de Walle, ICET, & others: these are implemented for
@@ -41,6 +41,25 @@ def phi_trig(int n,np.ndarray sigma,int dof):
 
 	if n % 2 ==0:
 		phi = -np.sin( ( np.pi *  n  * sigma )  /dof)
+
+	return np.prod(phi)
+#/-------------------------------------------------------/
+
+
+#/-------------------------------------------------------/
+def phi_t(list m,np.ndarray sigma,int dof):
+	cdef np.ndarray phi = np.zeros(np.shape(sigma))
+	cdef int n, i
+	for i in range(np.shape(sigma)[0]):
+		n= m[i]
+		if n ==0:
+			phi[i] = sigma[i]
+
+		if n % 2 !=0:
+			phi[i] = -np.cos( ( np.pi * (n+1) * sigma[i] )  /dof)
+
+		if n % 2 ==0:
+			phi[i] = -np.sin( ( np.pi *  n  * sigma[i] )  /dof)
 
 	return np.prod(phi)
 #/-------------------------------------------------------/

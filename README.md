@@ -1,15 +1,5 @@
 # clst_order
 
-## Requirements
-
-Python 3.6 or later spglib v. 1.16.0
-ASE v. 3.16.0 or later recommended
-
-Both required modules can be installed via pip:
-
-<code><pre>pip install ase && pip install spglib</code></pre>
-
-
 ## Summary
 
 Post-processing tools for calculating short-range order (SRO) parameters in
@@ -28,7 +18,7 @@ parameter calculator.
 
 ## Installation
 
-run clean first
+Add the software directory to your pythonpath then run the clean.sh script
 
 <pre><code>./clean.sh </code></pre>
 
@@ -66,6 +56,7 @@ cluster probability with one occupation is measured per calculation. This will
 soon be changed to the probabilities of all occupations in a single cluster.
 
 <pre><code>from clst_prob import *
+from lib_basis import *
 prim_vectors, p_sites, p_numbers, p_sublattices = from_ase( prim_atoms , zsubs )
 
 p = prim_cell(prim_vectors, p_sites, p_numbers, zsubs = [[0,1,2,3,4]],
@@ -78,15 +69,15 @@ clst_verts =[ [0.  , 0.  , 0.66290],
 [0.66666667 , 0.33333333 , 0.50000], 
 [0.00000 , 0.00000 , 0.41855] ]
 
+#define all cluster vectors at these vertices with 2 degrees of freedom
+clst =  cluster(clst_verts,get_variables(2))
+
 supercell = cluster_cell(vectors,sites,numbers,p)
-
-clst =  cluster(clst_verts,d_occ='-1-1-1-1')
-
 supercell.add_cluster(clst)
 
-probabilities, clst_functions = y.cluster_avg_2d()</code></pre>
+print( y.cluster_avg(is_slab=True))</code></pre>
 
-Detailed descriptions of variables are provided in the <code><pre>clst_prob.py</code></pre>
+Detailed descriptions of variables are provided in the clst_prob.py
 script and example execution is provided in the examples folder. This
-includes an example for parallelized execution of the software for many large
+includes an example for parallelized execution of the software for several large
 trajectory files.
