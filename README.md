@@ -5,7 +5,7 @@
 Post-processing tools for calculating short-range order (SRO) parameters in
 substitutional lattice systems. These tools can be used to calculate the
 Warren-Cowley pair paramters as well as the cluster order parameters defined in
-PRB ... The occurrence of arbitrary multi-point SRO motifs are systematically
+the COP paper. The occurrence of arbitrary multi-point SRO motifs are systematically
 quantified by direct calculation normalized cluster probabilities. The software
 is written in python/cython for front-end accessiblity, and is compatible with
 any crystal structure file compatible [with
