@@ -33,6 +33,7 @@ def get_variables(int dof):
 #/-------------------------------------------------------/
 def phi_trig(int n,np.ndarray sigma,int dof):
 	cdef np.ndarray phi
+	dof = dof*2
 	if n ==0:
 		phi=np.ones(np.shape(sigma)[0])
 
@@ -50,6 +51,7 @@ def phi_trig(int n,np.ndarray sigma,int dof):
 def phi_t(list m,np.ndarray sigma,int dof):
 	cdef np.ndarray phi = np.zeros(np.shape(sigma))
 	cdef int n, i
+	dof = dof*2
 	for i in range(np.shape(sigma)[0]):
 		n= m[i]
 		if n ==0:

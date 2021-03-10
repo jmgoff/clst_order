@@ -1,18 +1,18 @@
 import numpy as np
 
 def get_variables(dof):
-	if dof %2 ==0:
-		i = dof/2
-		i = int(i)
-		variables = np.arange(-i,i+1).tolist()
-		remove = variables.index(0)
-		variables.pop(remove)
-	if dof %2 != 0:
-		i = (dof -1)/2
-		i = int(i)
-		variables = np.arange(-i,i+1).tolist()
+    if dof %2 ==0:
+        i = dof/2
+        i = int(i)
+        variables = np.arange(-i,i+1).tolist()
+        remove = variables.index(0)
+        variables.pop(remove)
+    if dof %2 != 0:
+        i = (dof -1)/2
+        i = int(i)
+        variables = np.arange(-i,i+1).tolist()
 
-	return variables
+    return variables
 
 # basis functions below are the trigonometric basis fcns
 #  used in Van de Walle, ICET, & others: these are implemented for
@@ -21,33 +21,35 @@ def get_variables(dof):
 
 #/-------------------------------------------------------/
 def phi_trig(n,sigma,dof):
-	sigma = np.array(sigma)
-	if n ==0:
-		phi=np.ones(len(sigma))
+    dof = dof*2
+    sigma = np.array(sigma)
+    if n ==0:
+        phi=np.ones(len(sigma))
 
-	if n % 2 !=0:
-		phi = -np.cos( ( np.pi * ( n +1) * sigma)  /dof)
+    if n % 2 !=0:
+        phi = -np.cos( ( np.pi * ( n +1) * sigma)  /dof)
 
-	if n % 2 ==0:
-		phi = -np.sin( ( np.pi *  n  * sigma)  /dof)
+    if n % 2 ==0:
+        phi = -np.sin( ( np.pi *  n  * sigma)  /dof)
 
-	return np.prod(phi)
+    return np.prod(phi)
 #/-------------------------------------------------------/
 
 def phi_t(m,sigma,dof):
-	phi = np.zeros(np.shape(sigma))
-	for i in range(np.shape(sigma)[0]):
-		n= m[i]
-		if n ==0:
-			phi[i] = sigma[i]
+    dof = dof*2
+    phi = np.zeros(np.shape(sigma))
+    for i in range(np.shape(sigma)[0]):
+        n= m[i]
+        if n ==0:
+            phi[i] = sigma[i]
 
-		if n % 2 !=0:
-			phi[i] = -np.cos( ( np.pi * (n+1) * sigma[i] )  /dof)
+        if n % 2 !=0:
+            phi[i] = -np.cos( ( np.pi * (n+1) * sigma[i] )  /dof)
 
-		if n % 2 ==0:
-			phi[i] = -np.sin( ( np.pi *  n  * sigma[i] )  /dof)
+        if n % 2 ==0:
+            phi[i] = -np.sin( ( np.pi *  n  * sigma[i] )  /dof)
 
-	return np.prod(phi)
+    return np.prod(phi)
 
 
 # basis functions below are the discrete chebychev basis
@@ -55,31 +57,31 @@ def phi_t(m,sigma,dof):
 # up to 4 degrees of freedom
 #/-------------------------------------------------------/
 def phi_0(sigma,dof):
-	return np.ones(np.shape(sigma))
+    return np.ones(np.shape(sigma))
 
 def phi_1(sigma,dof):
-	if dof ==1:
-		raise ValueError('Site degrees of freedom must be >= 2')
-	if dof ==2:
-		return np.prod(sigma)
-	if dof ==3:
-		return np.prod(np.multiply(np.sqrt(3/2),sigma ))
-	if dof ==4:
-		return np.prod(np.multiply(np.sqrt(2/5),sigma ))
+    if dof ==1:
+        raise ValueError('Site degrees of freedom must be >= 2')
+    if dof ==2:
+        return np.prod(sigma)
+    if dof ==3:
+        return np.prod(np.multiply(np.sqrt(3/2),sigma ))
+    if dof ==4:
+        return np.prod(np.multiply(np.sqrt(2/5),sigma ))
 
 
 def phi_2(sigma,dof):
-	if dof < 3:
-		raise ValueError('Site degrees of freedom must be >= 3')
-	if dof ==3:
-		return np.prod(np.sqrt(3) - np.multiply(np.sqrt(3), np.multiply(sigma,sigma) ))
-	if dof ==4:
-		return np.prod( (np.sqrt(34)/3) - np.multiply(((5/3)*np.sqrt(2/17)), np.multiply(sigma,sigma) ) )
+    if dof < 3:
+        raise ValueError('Site degrees of freedom must be >= 3')
+    if dof ==3:
+        return np.prod(np.sqrt(3) - np.multiply(np.sqrt(3), np.multiply(sigma,sigma) ))
+    if dof ==4:
+        return np.prod( (np.sqrt(34)/3) - np.multiply(((5/3)*np.sqrt(2/17)), np.multiply(sigma,sigma) ) )
 
 
 def phi_3(sigma,dof):
-	if dof <4:
-		raise ValueError('Site degrees of freedom must be >= 4')
-	if dof ==4:
-		return np.prod(np.multiply((-17/3)*np.sqrt(1/10),sigma) + np.multiply((1/3)*np.sqrt(5/2),(np.multiply(sigma,np.multiply(sigma,sigma)))))
+    if dof <4:
+        raise ValueError('Site degrees of freedom must be >= 4')
+    if dof ==4:
+        return np.prod(np.multiply((-17/3)*np.sqrt(1/10),sigma) + np.multiply((1/3)*np.sqrt(5/2),(np.multiply(sigma,np.multiply(sigma,sigma)))))
 #/--------------------------------------------------------/
